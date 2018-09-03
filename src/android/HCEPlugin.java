@@ -40,14 +40,13 @@ public class HCEPlugin extends CordovaPlugin {
             callbackContext.sendPluginResult(result);
 
         } else if (action.equalsIgnoreCase(SEND_RESPONSE)) {
-
-            byte[] data = args.getArrayBuffer(0);
-
+            String stringArgs = args.getString(0);
+            byte[] data = getByteArrayFromStringArgs(stringArgs);
             if (CordovaApduService.sendResponse(data)) {
                 callbackContext.success();
             } else {
                 // TODO This message won't make sense to developers.
-                callbackContext.error("Missing Reference to CordovaApduService.");
+                callbackContext.error("Missing Reference to CordovaApduService - Javascript has wrong syntax?.");
             }
 
         } else if (action.equalsIgnoreCase(REGISTER_DEACTIVATED_CALLBACK)) {
@@ -65,6 +64,27 @@ public class HCEPlugin extends CordovaPlugin {
         }
 
         return true;
+    }
+
+    // Turn json string into a byte array if I remember correctly?
+    private byte[] getByteArrayFromStringArgs(String arg)
+    {
+        arg = arg.replace("{", "");
+        arg = arg.replace("}", "");
+        arg = arg.replace("\"", "");
+
+        String[] argArr = arg.split(",");
+        byte[] finalArr = new byte[argArr.length];
+        for(int i=0; i<argArr.length; i++)
+        {
+            String[] tempArr = argArr[i].split(":");
+            int index = Integer.parseInt(tempArr[0]);
+            int value = Integer.parseInt(tempArr[1]);
+            byte b = (byte) value;
+            finalArr[index] = b;
+        }
+
+        return finalArr;
     }
 
     public void deactivated(int reason) {
